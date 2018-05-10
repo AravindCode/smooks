@@ -421,7 +421,7 @@ public class EDIParser implements XMLReader {
 	private void parse(boolean indent) throws SAXException, IOException, EDIParseException {
         boolean ignoreUnmappedSegment = edifactModel.getEdimap().isIgnoreUnmappedSegments();
 
-		startElement(edifactModel.getEdimap().getSegments(), indent);
+//		startElement(edifactModel.getEdimap().getSegments(), indent);
 
 		// Work through all the segments in the model.  Move to the first segment before starting...
 		if(segmentReader.moveToNextSegment()) {
