@@ -21,6 +21,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import org.apache.commons.logging.Log;
@@ -53,6 +55,7 @@ public class BufferedSegmentReader {
     private BufferedSegmentListener segmentListener;
     private boolean ignoreNewLines;
     private int charReadCount = 0;
+    List<String> segmentList = new ArrayList<String>();
 
 
     /**
@@ -318,6 +321,108 @@ public class BufferedSegmentReader {
         c = forwardPastWhitespace(c);
 
         boolean escapingMode = false;
+        
+
+        // Read the next segment...
+        while(c != -1) {
+            char theChar = (char) c;
+
+            if (ignoreCRLF && (theChar == '\n' || theChar == '\r')) {
+                c = readChar();
+                continue;
+            }
+
+            segmentBuffer.append((char)c);
+
+            int segLen = segmentBuffer.length();
+            if(segLen >= delimiterLen) {
+
+            	boolean reachedSegEnd = true;
+            	
+                for(int i = 0; i < delimiterLen; i++) {
+                    char segChar = segmentBuffer.charAt(segLen - 1 - i);
+                    char delimChar = segmentDelimiter[delimiterLen - 1 - i];
+
+                    if (escapingMode) {
+                        if (segChar == delimChar) {
+                            segmentBuffer = segmentBuffer.delete(segLen - 2, segLen - 1);
+                        }
+                        escapingMode = false;
+                        reachedSegEnd = false;
+                        break;
+                    } else if (escape != null && escape.equals(Character.toString(segChar))) {
+                        escapingMode = true;
+                    }
+
+                    if (segChar != delimChar) {
+                        // Not the end of a segment
+                        reachedSegEnd = false;
+                        break;
+                    }
+
+                }
+
+                // We've reached the end of a segment...
+                if(reachedSegEnd) {
+                    // Trim off the delimiter and break out...
+                    segmentBuffer.setLength(segLen - delimiterLen);
+                    segmentList.add( segmentBuffer.toString());
+                    segmentBuffer.setLength(0);
+                    c = readChar();
+                    continue;
+                }
+            }
+
+            c = readChar();
+        }
+        
+        if( c == -1 && segmentBuffer.length() != 0) {
+        	segmentList.add( segmentBuffer.toString());
+        }
+
+        if(logger.isDebugEnabled()) {
+            logger.debug(segmentBuffer.toString());
+        }
+
+        currentSegmentNumber++;
+
+        if(segmentListener != null) {
+            return segmentListener.onSegment(this);
+        } else {
+        	
+            return true;
+        }
+    }
+    
+    
+   /* public String redAllSegments(boolean clearBuffer) throws IOException {
+        char[] segmentDelimiter = currentDelimiters.getSegmentDelimiter();
+        int delimiterLen = segmentDelimiter.length;
+        String escape = currentDelimiters.getEscape();
+        int escapeLen = escape != null ? escape.length() : 0;
+        boolean ignoreCRLF;
+
+        int c = readChar();
+
+        // Ignoring of new lines can be set as part of the segment delimiter, or
+        // as a feature on the parser (the later is the preferred method)...
+        ignoreCRLF = (currentDelimiters.ignoreCRLF() || ignoreNewLines);
+
+        if(clearBuffer) {
+            segmentBuffer.setLength(0);
+        }
+        currentSegmentFields = null;
+
+        // We reached the end of the stream the last time this method was
+        // called - see the while loop below...
+        if(c == -1) {
+            return "";
+        }
+
+        // Ignore leading whitespace on a segment...
+        c = forwardPastWhitespace(c);
+
+        boolean escapingMode = false;
 
         // Read the next segment...
         while(c != -1) {
@@ -371,15 +476,27 @@ public class BufferedSegmentReader {
         if(logger.isDebugEnabled()) {
             logger.debug(segmentBuffer.toString());
         }
+        
+        String str = segmentBuffer.toString();
+        segmentBufferList.add( str );
+        System.out.println(str);
+        logger.debug(str);
+        System.out.println(segmentBuffer.toString());
+        
+        if( c != -1) {
+        	moveToNextSegment(true);
+        	return true;
+        	}
 
         currentSegmentNumber++;
 
         if(segmentListener != null) {
             return segmentListener.onSegment(this);
         } else {
+        	
             return true;
         }
-    }
+    }*/
 
     /**
      * Does the read have a segment buffered and ready for processing.
@@ -424,6 +541,25 @@ public class BufferedSegmentReader {
 
         return currentSegmentFields;
     }
+    
+    
+    
+    public String[] getSegmentFields(String segment) throws IllegalStateException {
+//        assertCurrentSegmentExists();
+
+            currentSegmentFields = EDIUtils.split(segment, currentDelimiters.getField(), currentDelimiters.getEscape());
+
+            // If the segment delimiter is a LF, strip off any preceding CR characters...
+            if(currentDelimiters.getSegment().equals("\n")) {
+                int endIndex = currentSegmentFields.length - 1;
+                if(currentSegmentFields[endIndex].endsWith("\r")) {
+                    int stringLen = currentSegmentFields[endIndex].length();
+                    currentSegmentFields[endIndex] = currentSegmentFields[endIndex].substring(0, stringLen - 1);
+                }
+            }
+
+        return currentSegmentFields;
+    }
 
     /**
      * Get the current segment "number".
@@ -465,9 +601,18 @@ public class BufferedSegmentReader {
      */
     private void assertCurrentSegmentExists() {
         if(segmentBuffer.length() == 0) {
-            throw new IllegalStateException("No current segment available.  Possible conditions: \n"
+         /*   throw new IllegalStateException("No current segment available.  Possible conditions: \n"
                     + "\t\t1. A call to moveToNextSegment() was not made, or \n"
-                    + "\t\t2. The last call to moveToNextSegment() returned false.");
+                    + "\t\t2. The last call to moveToNextSegment() returned false.");*/
         }
     }
+
+	public List<String> getSegmentBufferList() {
+		return segmentList;
+	}
+
+	public void setSegmentBufferList(List<String> segmentBufferList) {
+		this.segmentList = segmentBufferList;
+	}
+
 }
