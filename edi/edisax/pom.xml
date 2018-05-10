@@ -9,28 +9,27 @@
         <relativePath>../../testres/pom.xml</relativePath>
     </parent>
 
-    <artifactId>milyn-edisax-parser</artifactId>
+    <artifactId>milyn-edisax-parser-fork</artifactId>
     <name>Milyn :: EDI :: EdiSax Parser</name>
     <groupId>com.ediparser</groupId>
     <version>1.7.0</version>
 
-    <dependencies>
+	<dependencies>
         <dependency>
             <groupId>org.milyn</groupId>
             <artifactId>milyn-commons</artifactId>
         </dependency>
         
         <dependency>
-    <groupId>org.apache.commons</groupId>
-    <artifactId>commons-lang3</artifactId>
-    <version>3.7</version>
-</dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    <version>3.7</version>
+		</dependency>
 
         <dependency>
   				<groupId>commons-logging</groupId>
 		  		<artifactId>commons-logging</artifactId>
 		</dependency> 
     </dependencies>
-
     
 </project>
