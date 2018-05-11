@@ -11,16 +11,19 @@
 
     <name>Milyn :: Smooks Cartridge :: EDI</name>
     <artifactId>milyn-smooks-edi</artifactId>
-    <packaging>bundle</packaging>
+    <groupId>com.ediparser.fork</groupId>
+    <version>1.7.0</version>
 
     <dependencies>
         <dependency>
-            <groupId>org.milyn</groupId>
-            <artifactId>milyn-edisax-parser</artifactId>
+            <groupId>com.ediparser</groupId>
+            <artifactId>milyn-edisax-parser-fork</artifactId>
+            <version>1.7.0</version>
         </dependency>
         <dependency>
             <groupId>org.milyn</groupId>
             <artifactId>milyn-smooks-javabean</artifactId>
         </dependency>
     </dependencies>
+    
 </project>
